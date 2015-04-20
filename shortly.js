@@ -39,7 +39,29 @@ function(req, res) {
 
 app.get('/login',
 function(req, res) {
-  res.render('login');
+  console.log(res.headers);
+  if (req.session.isAuthenticated) {
+    res.writeHead(302, {location: '/'});
+    res.end();
+  } else {
+    res.render('login');
+  }
+});
+
+app.post('/login', 
+function (req, res) {
+  var p = req.body.password;
+  new User({username: req.body.username}).fetch().then(function(user) {
+    bcrypt.compare(p, user.attributes.password, function (err, result) {
+      if (result) {
+        req.session.isAuthenticated = true;
+        res.redirect('/');
+      } else {
+        res.redirect('login');
+      }
+    });
+  });
+
 });
 
 app.get('/signup', 
@@ -61,7 +83,8 @@ function(req, res) {
        
         user.save().then(function(newUser) {
           Users.add(newUser);
-          res.send(200, "User saved");
+          req.session.isAuthenticated = true;
+          res.redirect('/');
         });
       });
     }

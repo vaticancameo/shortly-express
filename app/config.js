@@ -57,9 +57,9 @@ db.knex.schema.hasTable('users').then(function(exists) {
   }
 });
 
-db.knex('users').then(function(response) {
-  console.log(response);
-});
+// db.knex('users').then(function(response) {
+//   console.log(response);
+// });
 
 
 module.exports = db;
