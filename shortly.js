@@ -41,6 +41,32 @@ function(req, res) {
   res.render('login');
 });
 
+app.get('/signup', 
+function(req, res) {
+  res.render('signup');
+});
+
+app.post('/signup', 
+function(req, res) {
+  // req.body.username
+  // req.body.password
+  new User({ username: username}).fetch().then(function(found) {
+    if (found) {
+      res.send(200, "Username already exist");
+    } else {
+      var user = new User({
+        username: username,
+        password: password
+      });
+
+      user.save().then(function(newUser) {
+        Users.add(newUser);
+        res.send(200, "User saved");
+      });
+    }
+  });
+});
+
 app.get('/create', 
 function(req, res) {
   if(!req.session.isAuthenticated) {
