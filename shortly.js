@@ -3,7 +3,8 @@ var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
 var session = require('express-session');
-// npm install --save express-session
+var bcrypt = require('bcrypt-nodejs');
+
 var db = require('./app/config');
 var Users = require('./app/collections/users');
 var User = require('./app/models/user');
@@ -52,14 +53,16 @@ function(req, res) {
     if (found) {
       res.send(200, "Username already exist");
     } else {
-      var user = new User({
-        username: req.body.username,
-        password: req.body.password
-      });
-
-      user.save().then(function(newUser) {
-        Users.add(newUser);
-        res.send(200, "User saved");
+      bcrypt.hash(req.body.password, null, null, function (err, hash) {
+        var user = new User({
+          username: req.body.username,
+          password: hash
+        });
+       
+        user.save().then(function(newUser) {
+          Users.add(newUser);
+          res.send(200, "User saved");
+        });
       });
     }
   });
