@@ -48,15 +48,13 @@ function(req, res) {
 
 app.post('/signup', 
 function(req, res) {
-  // req.body.username
-  // req.body.password
-  new User({ username: username}).fetch().then(function(found) {
+  new User({ username: req.body.username}).fetch().then(function(found) {
     if (found) {
       res.send(200, "Username already exist");
     } else {
       var user = new User({
-        username: username,
-        password: password
+        username: req.body.username,
+        password: req.body.password
       });
 
       user.save().then(function(newUser) {
