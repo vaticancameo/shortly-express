@@ -30,7 +30,7 @@ window.Shortly = Backbone.View.extend({
     e && e.preventDefault();
     this.router.navigate('/create', { trigger: true });
   },
-
+  
   updateNav: function(routeName){
     this.$el.find('.navigation li a')
       .removeClass('selected')

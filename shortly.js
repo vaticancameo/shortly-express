@@ -39,11 +39,11 @@ function(req, res) {
 
 app.get('/login',
 function(req, res) {
-  console.log(res.headers);
   if (req.session.isAuthenticated) {
     res.writeHead(302, {location: '/'});
     res.end();
   } else {
+    console.log('logout');
     res.render('login');
   }
 });
@@ -61,7 +61,6 @@ function (req, res) {
       }
     });
   });
-
 });
 
 app.get('/signup', 
@@ -143,6 +142,12 @@ function(req, res) {
       });
     }
   });
+});
+
+app.get('/logout', 
+function (req, res) {
+  req.session.destroy();
+  res.render('login');
 });
 
 /************************************************************/
