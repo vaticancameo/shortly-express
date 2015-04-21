@@ -57,6 +57,23 @@ db.knex.schema.hasTable('users').then(function(exists) {
   }
 });
 
+db.knex.schema.hasTable('github_users').then(function(exists) {
+  if (!exists) {
+    db.knex.schema.createTable('github_users', function (user) {
+      user.increments('id').primary();
+      user.string('githubId', 100);
+    }).then(function (table) {
+      console.log('Created Table', table);
+    });
+  }
+});
+
+
+
+// db.knex('users').where({username: 'jim'}).delete().then(function(response) {
+//   console.log('deleted!')
+// });
+
 // db.knex('users').then(function(response) {
 //   console.log(response);
 // });

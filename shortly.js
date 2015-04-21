@@ -2,6 +2,7 @@ var express = require('express');
 var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
+var cookieParser = require('cookie-parser');
 var session = require('express-session');
 var bcrypt = require('bcrypt-nodejs');
 
@@ -12,7 +13,17 @@ var Links = require('./app/collections/links');
 var Link = require('./app/models/link');
 var Click = require('./app/models/click');
 
+var Github_User = require('./app/models/github-user');
+var Github_Users = require('./app/collections/github-users');
+
+var passport = require('passport');
+var GitHubStrategy = require('passport-github').Strategy;
+
+
 var app = express();
+app.use(cookieParser());
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
@@ -27,6 +38,50 @@ app.use(session({
   resave: false,
   saveUninitialized: true
 }));
+
+passport.serializeUser(function(user, done) {
+  done(null, user);
+});
+
+passport.deserializeUser(function(obj, done) {
+  done(null, obj);
+});
+
+passport.use(new GitHubStrategy({
+    clientID: '16bb3453c2306d8a6d44',
+    clientSecret: 'd802a9d87e683c9f7889f54ca323db3cfeb291be',
+    callbackURL: "http://127.0.0.1:4568/auth/github/callback"
+  },
+  function(accessToken, refreshToken, profile, done) {
+    new Github_User({githubId: profile.id}).fetch().then(function(user) {
+      if (user) {
+        return done (null, user);
+      } else { 
+        var github_user = new Github_User({
+          githubId: profile.id
+        });
+         
+        github_user.save().then(function(newUser) {
+          Github_Users.add(newUser);
+          return done (null, newUser);
+        });
+        
+      }
+    });
+  }
+));
+
+app.get('/auth/github',
+  passport.authenticate('github'));
+
+app.get('/auth/github/callback', 
+  passport.authenticate('github', { failureRedirect: '/login' }),
+  function(req, res) {
+    // Successful authentication, redirect home.
+    req.session.isAuthenticated = true;
+    res.redirect('/');
+  });
+
 // req.session.isAuthenticated
 app.get('/', 
 function(req, res) {
@@ -37,13 +92,17 @@ function(req, res) {
   }
 });
 
+var renderLogin = function (res, message) {
+  res.render('login', message);
+};
+
 app.get('/login',
 function(req, res) {
   if (req.session.isAuthenticated) {
     res.writeHead(302, {location: '/'});
-    res.end();
+    res.end() ;
   } else {
-    res.render('login');
+    res.render('login', {message: ''});
   }
 });
 
@@ -57,25 +116,29 @@ function (req, res) {
           req.session.isAuthenticated = true;
           res.redirect('/');
         } else {
-          res.redirect('/login');
+          var message = {message: '<div class="alert alert-danger">Password is incorrect!</div>'};
+          renderLogin(res, message);
         }
       });
     } else {
-      res.redirect('/login');
+      var message = {message: '<div class="alert alert-danger">Username does not exist!</div>'};
+      renderLogin(res, message);
+      // res.redirect('/login');
     }
   });
 });
 
 app.get('/signup', 
 function(req, res) {
-  res.render('signup');
+  res.render('signup', {message: ''});
 });
 
 app.post('/signup', 
 function(req, res) {
   new User({ username: req.body.username}).fetch().then(function(found) {
     if (found) {
-      res.send(200, "Username already exist");
+      var message = {message: '<div class="alert alert-danger">Username already exists!</div>'};
+      res.render('signup', message);
     } else {
       bcrypt.hash(req.body.password, null, null, function (err, hash) {
         var user = new User({
