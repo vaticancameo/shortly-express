@@ -43,7 +43,6 @@ function(req, res) {
     res.writeHead(302, {location: '/'});
     res.end();
   } else {
-    console.log('logout');
     res.render('login');
   }
 });
@@ -52,14 +51,18 @@ app.post('/login',
 function (req, res) {
   var p = req.body.password;
   new User({username: req.body.username}).fetch().then(function(user) {
-    bcrypt.compare(p, user.attributes.password, function (err, result) {
-      if (result) {
-        req.session.isAuthenticated = true;
-        res.redirect('/');
-      } else {
-        res.redirect('login');
-      }
-    });
+    if (user) {
+      bcrypt.compare(p, user.attributes.password, function (err, result) {
+        if (result) {
+          req.session.isAuthenticated = true;
+          res.redirect('/');
+        } else {
+          res.redirect('/login');
+        }
+      });
+    } else {
+      res.redirect('/login');
+    }
   });
 });
 
@@ -147,7 +150,7 @@ function(req, res) {
 app.get('/logout', 
 function (req, res) {
   req.session.destroy();
-  res.render('login');
+  res.redirect('/login');
 });
 
 /************************************************************/
