@@ -48,8 +48,8 @@ passport.deserializeUser(function(obj, done) {
 });
 
 passport.use(new GitHubStrategy({
-    clientID: '757af777b4713f2ca962',
-    clientSecret: '7cc20aab38af01d2248bf8464a8d2aa0916a7e80',
+    clientID: process.env.GITHUB_CLIENT_ID,
+    clientSecret: process.env.GITHUB_CLIENT_SECRET,
     callbackURL: "http://shortlyurl.herokuapp.com/auth/github/callback"
   },
   function(accessToken, refreshToken, profile, done) {
